@@ -1,2 +1,2 @@
 # puzzles
-Some Interesting puzzles solved in java
+Some Interesting puzzles solved in Java
