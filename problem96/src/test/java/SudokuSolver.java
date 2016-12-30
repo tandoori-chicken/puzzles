@@ -11,6 +11,8 @@ import java.util.List;
 /**
  * Created by adarsh on 30/12/2016.
  */
+
+//problem at https://projecteuler.net/problem=96
 public class SudokuSolver {
 
     private static final int UNASSIGNED = 0;
