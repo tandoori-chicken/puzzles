@@ -66,8 +66,8 @@ public class AnagramSquaresTest {
             if (anagramMapSquare.containsKey(uniqueIdentifier)) {
                 List<Long> anagramSet = anagramMapSquare.get(uniqueIdentifier);
                 anagramSet.add(square);
-                System.out.println("Found match");
-                anagramSet.stream().forEach(System.out::println);
+//                System.out.println("Found match");
+//                anagramSet.stream().forEach(System.out::println);
             } else {
                 anagramMapSquare.put(uniqueIdentifier, new ArrayList<>(Collections.singleton(square)));
             }
