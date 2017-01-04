@@ -19,22 +19,19 @@ public class SubsetGenerationTest {
 
         List<Set<Integer>> subsets = getSubsetsOfSize(parentSet, n);
 
-        System.out.println(subsets.size());
+//        System.out.println(subsets.size());
 
         int minSum = Integer.MAX_VALUE;
         Set<Integer> chosenSet = null;
-        int i = subsets.size();
-        for (Set<Integer> subset : subsets) {
 
-            if (i-- % 1000 == 0)
-                System.out.println(i/1000);
+        List<Set<Integer>> solutions = subsets.parallelStream().filter(this::checkValidity).collect(Collectors.toList());
 
-            if (!checkValidity(subset))
-                continue;
-            int sum = getSum(subset);
-            if (sum < minSum) {
+        for(Set<Integer> solution : solutions)
+        {
+            int sum = getSum(solution);
+                        if (sum < minSum) {
                 minSum = sum;
-                chosenSet = subset;
+                chosenSet = solution;
             }
         }
 
