@@ -1,31 +1,87 @@
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by adarsh on 03/01/2017.
  */
+
+//problem at https://projecteuler.net/problem=103
 public class SubsetGenerationTest {
 
     @Test
     public void testSubsetGeneration() {
-        Deque<Integer> parentSet = new LinkedList<>(Arrays.asList(1, 2, 4));
+        List<Integer> parentSet = IntStream.rangeClosed(20, 50).boxed().collect(Collectors.toList());
 
-        List<Deque<Integer>> subsets = getSubsets(parentSet);
+        int n = 7;
 
-        Assert.assertEquals(7, subsets.size());
+        List<Set<Integer>> subsets = getSubsetsOfSize(parentSet, n);
 
-        Assert.assertFalse(checkValidity(parentSet));
+        System.out.println(subsets.size());
 
-        Assert.assertTrue(checkValidity(new LinkedList<>(Arrays.asList(2, 3, 4))));
+        int minSum = Integer.MAX_VALUE;
+        Set<Integer> chosenSet = null;
+        int i = subsets.size();
+        for (Set<Integer> subset : subsets) {
+
+            if (i-- % 1000 == 0)
+                System.out.println(i/1000);
+
+            if (!checkValidity(subset))
+                continue;
+            int sum = getSum(subset);
+            if (sum < minSum) {
+                minSum = sum;
+                chosenSet = subset;
+            }
+        }
+
+        System.out.println(chosenSet + " " + minSum); //answer is 20,31,38,39,40,42,45 sum 255
 
 
     }
 
-    private boolean checkValidity(Deque<Integer> set) {
-        List<Deque<Integer>> subsets = getSubsets(set);
+    private List<Set<Integer>> getSubsetsOfSize(List<Integer> parentSet, int n) {
 
+        boolean used[] = new boolean[parentSet.size()];
+        return getSubsetsOfSize(parentSet, n, 0, 0, used);
+    }
+
+    private List<Set<Integer>> getSubsetsOfSize(List<Integer> parentSet, int targetLength, int startIndex, int curLength, boolean[] used) {
+        if (curLength == targetLength) {
+            Set<Integer> set = new HashSet<>(targetLength);
+            IntStream.range(0, parentSet.size()).boxed().filter(i -> used[i]).map(parentSet::get).forEach(set::add);
+            return new ArrayList<>(Collections.singleton(set));
+        }
+
+        if (startIndex == parentSet.size())
+            return null;
+
+        List<Set<Integer>> result = new ArrayList<>();
+        used[startIndex] = true;
+        List<Set<Integer>> trueResult = getSubsetsOfSize(parentSet, targetLength, startIndex + 1, curLength + 1, used);
+        if (trueResult != null) {
+            result.addAll(trueResult);
+        }
+
+        used[startIndex] = false;
+        List<Set<Integer>> falseResult = getSubsetsOfSize(parentSet, targetLength, startIndex + 1, curLength, used);
+        if (falseResult != null) {
+            result.addAll(falseResult);
+        }
+
+        if (trueResult == null && falseResult == null)
+            return null;
+
+        return result;
+
+    }
+
+    private boolean checkValidity(Set<Integer> set) {
+
+        List<Set<Integer>> subsets = getNonEmptySubsets(set);
         for (int i = 0; i < subsets.size(); i++) {
             for (int j = i + 1; j < subsets.size(); j++) {
 
@@ -38,27 +94,12 @@ public class SubsetGenerationTest {
 
     }
 
-    private boolean checkValidity(Deque<Integer> b, Deque<Integer> c) {
-        Deque<Integer> cloneB = new LinkedList<>(b);
-        cloneB.retainAll(c);
-        if (!cloneB.isEmpty())//if both sets have intersection
-        {
-            return true;
-        }
-        int sumB = getSum(b);
-        int sumC = getSum(c);
-        if (sumB == sumC)
-            return false;
-        if (b.size() == c.size())
-            return true;
-        if ((b.size() < c.size() && sumB > sumC) || (b.size() > c.size() && sumB < sumC))
-            return false;
+    private List<Set<Integer>> getNonEmptySubsets(Set<Integer> set) {
+        Deque<Integer> deque = new LinkedList<>(set);
 
-        return true;
-    }
+        List<Deque<Integer>> midResults = getSubsets(deque);
 
-    private int getSum(Deque<Integer> deque) {
-        return deque.stream().reduce((a, b) -> a + b).get();
+        return midResults.stream().map(d -> new HashSet<>(d)).collect(Collectors.toList());
     }
 
     private List<Deque<Integer>> getSubsets(Deque<Integer> set) {
@@ -82,5 +123,29 @@ public class SubsetGenerationTest {
         return result;
 
     }
+
+    private boolean checkValidity(Collection<Integer> b, Collection<Integer> c) {
+        Set<Integer> cloneB = new HashSet<>(b);
+        cloneB.retainAll(c);
+        if (!cloneB.isEmpty())//if both sets have intersection
+        {
+            return true;
+        }
+        int sumB = getSum(b);
+        int sumC = getSum(c);
+        if (sumB == sumC)
+            return false;
+        if (b.size() == c.size())
+            return true;
+        if ((b.size() < c.size() && sumB > sumC) || (b.size() > c.size() && sumB < sumC))
+            return false;
+
+        return true;
+    }
+
+    private int getSum(Collection<Integer> collection) {
+        return collection.stream().reduce((a, b) -> a + b).get();
+    }
+
 
 }
