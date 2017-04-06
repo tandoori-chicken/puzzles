@@ -30,7 +30,7 @@ public class MiscellaneousPuzzlesTest {
         }
 //        System.out.println(eggDrop(2, 100));
 //        System.out.println(eggDrop(3, 100));
-        Assert.assertEquals(14,eggDrop(2,100));
+        Assert.assertEquals(14, eggDrop(2, 100));
     }
 
     private static int[][] cache = new int[5][200];
@@ -411,5 +411,138 @@ public class MiscellaneousPuzzlesTest {
 
     }
 
+
+    @Test
+    public void testGeneratePermutationsWithDuplicateChars() {
+        /**
+         * Generate All permutations of a string with non-unique characters;
+         */
+
+        String input = "1223334";
+        Set<String> permutations = getPermutationsDuplicate(input);
+
+        Assert.assertEquals(getFactorial(input.length()) / (getFactorial(2) * getFactorial(3)), permutations.size());
+    }
+
+    private Set<String> getPermutationsDuplicate(String input) {
+        if (input.length() == 1 || getDistinctCharCount(input) == 1)
+            return Collections.singleton(input);
+        Set<String> permutations = new HashSet<>(getFactorial(input.length()));
+        char prefix = input.charAt(0);
+        String trimmedString = input.substring(1);
+        Set<String> subPermutations = getPermutationsDuplicate(trimmedString);
+        for (String string : subPermutations) {
+            for (int i = 0; i <= string.length(); i++) {
+                StringBuilder sb = new StringBuilder(input.length());
+                sb.append(string.substring(0, i));
+                sb.append(prefix);
+                sb.append(string.substring(i, string.length()));
+                permutations.add(sb.toString());
+            }
+        }
+        return permutations;
+    }
+
+    private int getDistinctCharCount(String input) {
+        int i = 0;
+        for (char c : input.toLowerCase().toCharArray()) {
+            int offset = Character.getNumericValue(c) - Character.getNumericValue('a');
+            i |= (1 << offset);
+        }
+        return Integer.bitCount(i);
+    }
+
+    @Test
+    public void testKthPermutationStringWithDuplicates() {
+        String input = "1223";
+
+        Assert.assertEquals(12, getNumPermutations(input));
+        Assert.assertEquals(420, getNumPermutations("1223334"));
+
+        Assert.assertEquals("3212", getKthPermutationWithDuplicates(input, 10));
+        Assert.assertEquals("2213", getKthPermutationWithDuplicates(input, 5));
+        Assert.assertEquals("1223", getKthPermutationWithDuplicates(input, 0));
+        Assert.assertEquals("1232", getKthPermutationWithDuplicates(input, 1));
+
+    }
+
+    private List<Integer> getCumulativePermutationList(String input) {
+        Map<Character, Integer> countMap = getCountMap(input);
+        Set<Character> processedCharacters = new HashSet<>();
+        List<Integer> result = new ArrayList<>();
+        int sum = 0;
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (processedCharacters.contains(c))
+                continue;
+            processedCharacters.add(c);
+            result.add(sum);
+            updateMap(countMap, c, -1);
+            sum += getNumPermutationsForCountMap(countMap);
+            updateMap(countMap, c, 1);
+        }
+        return result;
+    }
+
+    private int getNumPermutations(String input) {
+        Map<Character, Integer> countMap = getCountMap(input);
+        return getNumPermutationsForCountMap(countMap);
+    }
+
+    private int getNumPermutationsForCountMap(Map<Character, Integer> countMap) {
+        int sum = countMap.keySet().stream().map(countMap::get).reduce((a, b) -> a + b).get();
+        int result = getFactorial(sum);
+        for (char c : countMap.keySet()) {
+            result /= getFactorial(countMap.get(c));
+        }
+        return result;
+    }
+
+    private Map<Character, Integer> getCountMap(String input) {
+        Map<Character, Integer> countMap = new HashMap<>();
+        for (char c : input.toLowerCase().toCharArray()) {
+            updateMap(countMap, c, 1);
+        }
+        return countMap;
+    }
+
+    private void updateMap(Map<Character, Integer> countMap, char c, int delta) {
+        int val = countMap.getOrDefault(c, 0);
+        val += delta;
+        countMap.put(c, val);
+
+    }
+
+    private String getKthPermutationWithDuplicates(String input, int k) {
+        StringBuilder sb = new StringBuilder();
+        getKthPermutationWithDuplicates(input, k, sb);
+        return sb.toString();
+    }
+
+    private void getKthPermutationWithDuplicates(String input, int k, StringBuilder sb) {
+
+        if (input.length() == 1) {
+            sb.append(input);
+            return;
+        }
+        List<Integer> cumulativePermutationList = getCumulativePermutationList(input);
+        int index = 0;
+        for (; index < cumulativePermutationList.size() && cumulativePermutationList.get(index) <= k; index++) {
+        }
+        index--;
+        char prefix = getUniqueKthChar(input, index);
+        sb.append(prefix);
+        getKthPermutationWithDuplicates(input.replaceFirst(prefix + "", ""), k - cumulativePermutationList.get(index), sb);
+
+    }
+
+    private char getUniqueKthChar(String input, int index) {
+        List<Character> list = new ArrayList<>();
+        for (char c : input.toLowerCase().toCharArray()) {
+            if (!list.contains(c))
+                list.add(c);
+        }
+        return list.get(index);
+    }
 
 }
