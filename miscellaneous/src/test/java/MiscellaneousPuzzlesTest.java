@@ -1,6 +1,9 @@
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertTrue;
@@ -25,8 +28,9 @@ public class MiscellaneousPuzzlesTest {
                 cache[1][k] = k;
             }
         }
-        System.out.println(eggDrop(2, 100));
-        System.out.println(eggDrop(3, 100));
+//        System.out.println(eggDrop(2, 100));
+//        System.out.println(eggDrop(3, 100));
+        Assert.assertEquals(14,eggDrop(2,100));
     }
 
     private static int[][] cache = new int[5][200];
@@ -81,8 +85,9 @@ public class MiscellaneousPuzzlesTest {
         }
 
         for (int i = 1; i <= 100; i++) {
-            if (lockers[i])
-                System.out.println(i);
+            if (lockers[i]) {
+//                System.out.println(i); //Only perfect Squares stay open because they have odd number of factors :)
+            }
         }
     }
 
@@ -134,9 +139,9 @@ public class MiscellaneousPuzzlesTest {
             this.numTowers = numTowers;
         }
 
-        public HanoiDTO(String targetConfiguration,int numTowers) {
+        public HanoiDTO(String targetConfiguration, int numTowers) {
             this.targetConfiguration = targetConfiguration;
-            this.numTowers=numTowers;
+            this.numTowers = numTowers;
         }
     }
 
@@ -175,9 +180,9 @@ public class MiscellaneousPuzzlesTest {
             }
 
             HanoiDTO dto = new HanoiDTO(numTowers);
-            getSolution(sourceTowers, targetTowers,dto);
+            getSolution(sourceTowers, targetTowers, dto);
             assertTrue(dto.solutionFound);
-            System.out.println(numDisk + "\t" + dto.ctr); //ctr keeps track of number of executions. used to estimate O(n)
+//            System.out.println(numDisk + "\t" + dto.ctr); //ctr keeps track of number of executions. used to estimate O(n)
         }
 
 
@@ -189,13 +194,13 @@ public class MiscellaneousPuzzlesTest {
         List<List<Stack<Integer>>> nextConfigurations = getNextConfigurations(towers, dto);
 
         for (List<Stack<Integer>> nextConfiguration : nextConfigurations) {
-                if (stringify2(nextConfiguration).equals(dto.targetConfiguration)){
-                    dto.solutionFound = true;
-                    return;
-                }
-                getSolution2(nextConfiguration, dto);
-                if (dto.solutionFound)
-                    return;
+            if (stringify2(nextConfiguration).equals(dto.targetConfiguration)) {
+                dto.solutionFound = true;
+                return;
+            }
+            getSolution2(nextConfiguration, dto);
+            if (dto.solutionFound)
+                return;
         }
 
     }
@@ -233,15 +238,15 @@ public class MiscellaneousPuzzlesTest {
     private List<List<Stack<Integer>>> getNextConfigurations(List<Stack<Integer>> towers, HanoiDTO dto) {
         List<List<Stack<Integer>>> listOfTowers = new ArrayList<>();
 
-            for (int i = 0; i < dto.numTowers; i++) {
-                for (int j = dto.numTowers - 1; j >= 0; j--) {
+        for (int i = 0; i < dto.numTowers; i++) {
+            for (int j = dto.numTowers - 1; j >= 0; j--) {
 
-                    if (i == j)
-                        continue;
+                if (i == j)
+                    continue;
 
-                    List<Stack<Integer>> nextConfiguration = getNextConfiguration(towers, i, j);
-                    if (nextConfiguration != null && !dto.processedConfigurations.contains(stringify2(nextConfiguration)))
-                        listOfTowers.add(nextConfiguration);
+                List<Stack<Integer>> nextConfiguration = getNextConfiguration(towers, i, j);
+                if (nextConfiguration != null && !dto.processedConfigurations.contains(stringify2(nextConfiguration)))
+                    listOfTowers.add(nextConfiguration);
 
             }
         }
@@ -303,5 +308,108 @@ public class MiscellaneousPuzzlesTest {
         }
         return sb.toString();
     }
+
+    @Test
+    public void testSubsetGeneration() {
+        List<Integer> set = IntStream.rangeClosed(0, 2).boxed().collect(Collectors.toList());
+        int subsetSize = (int) Math.pow(2, set.size());
+        List<List<Integer>> subsets = new ArrayList<>(subsetSize);
+
+        for (int i = 0; i < subsetSize; i++) {
+            List<Integer> configuration = getSetConfiguration(set, i);
+            subsets.add(configuration);
+//            System.out.println(i+"\t"+stringify(configuration));
+        }
+
+        Assert.assertTrue(subsets.get(0).isEmpty());
+        Assert.assertTrue(subsets.get(subsetSize - 1).size() == set.size());
+        Assert.assertTrue(subsets.get(4).size() == 1 && subsets.get(5).contains(set.get(2)));
+
+    }
+
+    private String stringify(List<Integer> list) {
+        StringBuilder sb = new StringBuilder();
+        list.forEach(sb::append);
+        return sb.toString();
+    }
+
+    private List<Integer> getSetConfiguration(List<Integer> set, int i) {
+        List<Integer> solution = new ArrayList<>();
+        int index = 0;
+        while (i > 0) {
+            if ((i & 1) == 1) {
+                solution.add(set.get(index));
+            }
+            index++;
+            i >>= 1;
+        }
+        return solution;
+    }
+
+    @Test
+    public void testGeneratePermutationString() {
+        /**
+         * Generate All permutations of a string with unique characters;
+         */
+
+        String input = "1234";
+        Set<String> permutations = getPermutations(input);
+
+        Assert.assertEquals(getFactorial(input.length()), permutations.size());
+
+    }
+
+    private Set<String> getPermutations(String input) {
+        if (input.length() == 1)
+            return Collections.singleton(input);
+        Set<String> permutations = new HashSet<>(getFactorial(input.length()));
+        char prefix = input.charAt(0);
+        String trimmedString = input.substring(1);
+        Set<String> subPermutations = getPermutations(trimmedString);
+        for (String string : subPermutations) {
+            for (int i = 0; i <= string.length(); i++) {
+                StringBuilder sb = new StringBuilder(input.length());
+                sb.append(string.substring(0, i));
+                sb.append(prefix);
+                sb.append(string.substring(i, string.length()));
+                permutations.add(sb.toString());
+            }
+        }
+        return permutations;
+    }
+
+    private int getFactorial(int i) {
+        if (i <= 1)
+            return 1;
+        return i * getFactorial(i - 1);
+    }
+
+    @Test
+    public void testGetKthPermutationOfString() {
+        String input = "1234";
+        String kthPermutation = getKthPermutation(input, 11);
+        Assert.assertEquals("2431", kthPermutation);
+    }
+
+    private String getKthPermutation(String input, int k) {
+        StringBuilder sb = new StringBuilder();
+        getKthPermutation(input, k, sb);
+        return sb.toString();
+    }
+
+    private void getKthPermutation(String input, int k, StringBuilder sb) {
+
+        if (input.length() == 1) {
+            sb.append(input);
+            return;
+        }
+        int factorial = getFactorial(input.length() - 1);
+
+        char prefix = input.charAt(k / factorial);
+        sb.append(prefix);
+        getKthPermutation(StringUtils.remove(input, prefix), k % factorial, sb);
+
+    }
+
 
 }
