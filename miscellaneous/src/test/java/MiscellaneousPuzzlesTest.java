@@ -655,8 +655,7 @@ public class MiscellaneousPuzzlesTest {
     }
 
     @Test
-    public void testNumberOfWaysToMakeChange()
-    {
+    public void testNumberOfWaysToMakeChange() {
         /**
          * Given an infinite number of quarters (25 cents), dimes (10 cents), nickels (5 cents), and
          pennies (1 cent), write code to calculate the number of ways of representing n cents.
@@ -669,35 +668,303 @@ public class MiscellaneousPuzzlesTest {
          * + number of ways of reaching 23 without 25 cents
          */
 
-        int n=98;
+        int n = 98;
 
         int numWays = getNumWays(n);
         System.out.println(numWays);
 
-        Assert.assertEquals(2,getNumWays(5));
-        Assert.assertEquals(4,getNumWays(10));
+        Assert.assertEquals(2, getNumWays(5));
+        Assert.assertEquals(4, getNumWays(10));
 
 
     }
 
     private int getNumWays(int n) {
-        int[] changeArray = new int[]{1,5,10,25};
-        return getNumWays(n,changeArray,changeArray.length-1);
+        int[] changeArray = new int[]{1, 5, 10, 25};
+        return getNumWays(n, changeArray, changeArray.length - 1);
     }
 
     private int getNumWays(int n, int[] changeArray, int maxIndex) {
-        if(maxIndex==0)
+        if (maxIndex == 0)
             return 1;
-        if(n<changeArray[maxIndex])
-            return getNumWays(n,changeArray,maxIndex-1);
-        int numWays=0;
-        for(int i=0;i<=n/changeArray[maxIndex];i++)
-        {
-            numWays+=getNumWays(n-(i*changeArray[maxIndex]),changeArray,maxIndex-1);
+        if (n < changeArray[maxIndex])
+            return getNumWays(n, changeArray, maxIndex - 1);
+        int numWays = 0;
+        for (int i = 0; i <= n / changeArray[maxIndex]; i++) {
+            numWays += getNumWays(n - (i * changeArray[maxIndex]), changeArray, maxIndex - 1);
         }
         return numWays;
     }
 
+    @Test
+    public void testSudokuSolver() {
+        int[][] sudoku = getTestInput();
+        boolean solved = solveSudoku(sudoku);
+        Assert.assertTrue(solved);
 
+//        printSudoku(sudoku);
+        Assert.assertNull(getNextUnassignedLocation(sudoku));
+    }
+
+    private void printSudoku(int[][] sudoku) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                sb.append(sudoku[i][j]);
+                sb.append("\t");
+            }
+            sb.append("\n");
+        }
+        System.out.println(sb.toString());
+    }
+
+    private boolean solveSudoku(int[][] sudoku) {
+        RowColumnDTO dto = getNextUnassignedLocation(sudoku);
+        if (dto == null)
+            return true;
+
+        for (int i = 1; i <= 9; i++) {
+            if (!isValidLocation(i, dto, sudoku))
+                continue;
+            sudoku[dto.row][dto.col] = i;
+            boolean subSolution = solveSudoku(sudoku);
+            if (subSolution)
+                return true;
+            sudoku[dto.row][dto.col] = 0;
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the value 'i' is valid at the location specified by the DTO
+     */
+    private boolean isValidLocation(int i, RowColumnDTO dto, int[][] sudoku) {
+        return isRowValid(i, dto, sudoku) && isColumnValid(i, dto, sudoku) && isBoxValid(i, dto, sudoku);
+    }
+
+    private boolean isRowValid(int val, RowColumnDTO dto, int[][] sudoku) {
+        for (int col = 0; col < 9; col++) {
+            if (sudoku[dto.row][col] == val)
+                return false;
+        }
+        return true;
+    }
+
+    private boolean isColumnValid(int val, RowColumnDTO dto, int[][] sudoku) {
+        for (int row = 0; row < 9; row++) {
+            if (sudoku[row][dto.col] == val)
+                return false;
+        }
+        return true;
+    }
+
+    private boolean isBoxValid(int val, RowColumnDTO dto, int[][] sudoku) {
+        int rowOffset = (dto.row / 3) * 3;
+        int colOffset = (dto.col / 3) * 3;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (sudoku[i + rowOffset][j + colOffset] == val)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * Gets location of first '0' entry
+     */
+    private RowColumnDTO getNextUnassignedLocation(int[][] sudoku) {
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (sudoku[i][j] == 0)
+                    return new RowColumnDTO(i, j);
+            }
+        }
+        return null;
+    }
+
+    private class RowColumnDTO {
+        int row, col;
+
+        public RowColumnDTO(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("(");
+            sb.append(this.row);
+            sb.append(",");
+            sb.append(this.col);
+            sb.append(")");
+            return sb.toString();
+        }
+//
+//        @Override
+//        public boolean equals(Object o) {
+//            if (this == o) return true;
+//
+//            if (o == null || getClass() != o.getClass()) return false;
+//
+//            RowColumnDTO that = (RowColumnDTO) o;
+//
+//            return new EqualsBuilder()
+//                    .append(row, that.row)
+//                    .append(col, that.col)
+//                    .isEquals();
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            return new HashCodeBuilder(17, 37)
+//                    .append(row)
+//                    .append(col)
+//                    .toHashCode();
+//        }
+    }
+
+    private int[][] getTestInput() {
+
+        return new int[][]{
+                {0, 0, 3, 0, 2, 0, 6, 0, 0},
+                {9, 0, 0, 3, 0, 5, 0, 0, 1},
+                {0, 0, 1, 8, 0, 6, 4, 0, 0},
+                {0, 0, 8, 1, 0, 2, 9, 0, 0},
+                {7, 0, 0, 0, 0, 0, 0, 0, 8},
+                {0, 0, 6, 7, 0, 8, 2, 0, 0},
+                {0, 0, 2, 6, 0, 9, 5, 0, 0},
+                {8, 0, 0, 2, 0, 3, 0, 0, 9},
+                {0, 0, 5, 0, 1, 0, 3, 0, 0}
+        };
+    }
+
+
+    /**
+     * Write an algorithm to print all ways of arranging eight queens on an 8x8 chess board so that none of them share the same row, column, or diagonal.
+     * In this case, "diagonal" means all diagonals, not just the two that bisect the board.
+     */
+    @Test
+    public void testQueenPlacementInChess() {
+        char[][] board = getChessBoard();
+
+        board[2][1] = 'Q';
+        Set<RowColumnDTO> queenPositions = new HashSet<>(Arrays.asList(
+                new RowColumnDTO(2, 1)
+        ));
+
+        Assert.assertFalse(isValidQueenPlacement(board, 0, 3, queenPositions));
+        Assert.assertFalse(isValidQueenPlacement(board, 3, 0, queenPositions));
+        Assert.assertFalse(isValidQueenPlacement(board, 1, 0, queenPositions));
+        Assert.assertFalse(isValidQueenPlacement(board, 7, 6, queenPositions));
+        Assert.assertFalse(isValidQueenPlacement(board, 2, 7, queenPositions));
+        Assert.assertFalse(isValidQueenPlacement(board, 6, 1, queenPositions));
+        Assert.assertTrue(isValidQueenPlacement(board, 4, 4, queenPositions));
+
+
+        board = getChessBoard();
+        printQueenConfigurations(board, 0);
+        Assert.assertEquals(92,ctr);
+    }
+
+    static int ctr=0;
+    private void printQueenConfigurations(char[][] board, int minIndex) {
+        Set<RowColumnDTO> queenPositions = getQueenPositions(board);
+        if (queenPositions.size() == 8) {
+//            printBoard(board);
+            ctr++;
+            return;
+        }
+        if(minIndex==8)
+            return;
+//        if (minIndex == 6 && queenPositions.size() < 7)
+//            return;
+
+        for (int i = 0; i < 8; i++) {
+            char prev = board[i][minIndex];
+//            if (isValidQueenPlacement(board, i, minIndex, queenPositions)) {
+//                board[i][minIndex] = 'Q';
+//                printQueenConfigurations(board, minIndex + 1);
+//                board[i][minIndex] = prev;
+//            }
+            if (isValidQueenPlacement(board, minIndex, i, queenPositions)) {
+                prev = board[minIndex][i];
+                board[minIndex][i] = 'Q';
+                printQueenConfigurations(board, minIndex + 1);
+                board[minIndex][i] = prev;
+            }
+        }
+//        printQueenConfigurations(board, minIndex + 1);
+    }
+
+    private Set<RowColumnDTO> getQueenPositions(char[][] board) {
+        Set<RowColumnDTO> queenPositions = new HashSet<>();
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j] == 'Q')
+                    queenPositions.add(new RowColumnDTO(i, j));
+            }
+        }
+        return queenPositions;
+    }
+
+    private boolean isValidQueenPlacement(char[][] board, RowColumnDTO dto, Set<RowColumnDTO> queenPositions) {
+        for (RowColumnDTO queenPosition : queenPositions) {
+            if (!isValidPosition(dto, queenPosition))
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * returns true if potential position doesn't conflict with given single queen's position
+     */
+    private boolean isValidPosition(RowColumnDTO potentialPosition, RowColumnDTO queenPosition) {
+        if (potentialPosition.row == queenPosition.row || potentialPosition.col == queenPosition.col) //check row, col
+            return false;
+        if ((potentialPosition.row + potentialPosition.col) == (queenPosition.row + queenPosition.col)) //check diagonal 1
+            return false;
+        if ((potentialPosition.row - potentialPosition.col) == (queenPosition.row - queenPosition.col)) //check diagonal 2
+            return false;
+//        System.out.println("Returning True for "+potentialPosition+" and "+queenPosition);
+//        RowColumnDTO testDTO = new RowColumnDTO(5,1);
+//        RowColumnDTO testDTO2 = new RowColumnDTO(6,4);
+//        if(testDTO.equals(queenPosition)&&potentialPosition.equals(testDTO2))
+//            System.out.println(potentialPosition);
+        return true;
+    }
+
+    private boolean isValidQueenPlacement(char[][] board, int row, int col, Set<RowColumnDTO> queenPositions) {
+        return isValidQueenPlacement(board, new RowColumnDTO(row, col), queenPositions);
+    }
+
+
+    private void printBoard(char[][] board) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                sb.append(board[i][j] == 'Q' ? ""+i+j : '-');
+                sb.append("\t");
+            }
+            sb.append("\n");
+        }
+        System.out.println(sb);
+    }
+
+    private char[][] getChessBoard() {
+        char[][] board = new char[8][8];
+        boolean flag = false;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                board[i][j] = flag ? 'W' : 'B';
+                flag ^= true;
+            }
+            flag ^= true;
+        }
+        return board;
+    }
 
 }
