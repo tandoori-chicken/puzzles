@@ -545,4 +545,159 @@ public class MiscellaneousPuzzlesTest {
         return list.get(index);
     }
 
+    /**
+     * Print permutations possible with N brackets
+     */
+    @Test
+    public void testBracketPermutations() {
+
+        int n = 3;
+        printBracketPermutation(n);
+
+    }
+
+    private void printBracketPermutation(int n) {
+        printBracketPermutation(n, 0, "");
+    }
+
+    /**
+     * @param openStock  how many brackets should I open
+     * @param closeStock how many brackets should I close
+     * @param s          result tracker
+     */
+    private void printBracketPermutation(int openStock, int closeStock, String s) {
+        if (openStock == 0 && closeStock == 0)
+            System.out.println(s);
+        if (openStock > 0)
+            printBracketPermutation(openStock - 1, closeStock + 1, s + "(");
+        if (closeStock > 0)
+            printBracketPermutation(openStock, closeStock - 1, s + ")");
+    }
+
+    @Test
+    public void testPaintFill() {
+        int m = 10, n = 10;
+        PaintNode[][] canvas = new PaintNode[m][n];
+
+        /**
+         * Create grid of 0s and create 2 non-adjacent regions of 1s
+         */
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                canvas[i][j] = new PaintNode(0);
+                if (j < 3 && i < 4)
+                    canvas[i][j].paintIndex = 1;
+                if (j > 7 && i > 6)
+                    canvas[i][j].paintIndex = 1;
+            }
+        }
+
+        Assert.assertEquals(1, canvas[0][0].paintIndex);
+        Assert.assertEquals(1, canvas[m - 1][n - 1].paintIndex);
+        Assert.assertEquals(0, canvas[m / 2][n / 2].paintIndex);
+
+//        printCanvas(canvas);
+
+        fillRegion(canvas, 2, 2, 4); //Fill one region alone
+
+//        printCanvas(canvas);
+
+        Assert.assertEquals(4, canvas[0][0].paintIndex);
+        Assert.assertEquals(1, canvas[m - 1][n - 1].paintIndex);
+        Assert.assertEquals(0, canvas[m / 2][n / 2].paintIndex);
+
+    }
+
+    private void fillRegion(PaintNode[][] canvas, int i, int j, int newIndex) {
+        fillRegion(canvas, i, j, canvas[i][j].paintIndex, newIndex);
+
+    }
+
+    private void fillRegion(PaintNode[][] canvas, int i, int j, int oldIndex, int newIndex) {
+        if (i < 0 || i >= canvas.length || j < 0 || j >= canvas[i].length || canvas[i][j].visited || canvas[i][j].paintIndex != oldIndex)
+            return;
+
+        canvas[i][j].visited = true;
+        canvas[i][j].paintIndex = newIndex;
+
+        fillRegion(canvas, i - 1, j - 1, oldIndex, newIndex);
+        fillRegion(canvas, i - 1, j, oldIndex, newIndex);
+        fillRegion(canvas, i - 1, j + 1, oldIndex, newIndex);
+
+        fillRegion(canvas, i, j - 1, oldIndex, newIndex);
+        fillRegion(canvas, i, j + 1, oldIndex, newIndex);
+
+        fillRegion(canvas, i + 1, j - 1, oldIndex, newIndex);
+        fillRegion(canvas, i + 1, j, oldIndex, newIndex);
+        fillRegion(canvas, i + 1, j + 1, oldIndex, newIndex);
+
+    }
+
+    private void printCanvas(PaintNode[][] canvas) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < canvas.length; i++) {
+            for (int j = 0; j < canvas[i].length; j++) {
+                sb.append(canvas[i][j].paintIndex);
+                sb.append("\t");
+            }
+            sb.append("\n");
+        }
+        System.out.println(sb);
+    }
+
+    private class PaintNode {
+        int paintIndex;
+        boolean visited = false;
+
+        public PaintNode(int paintIndex) {
+            this.paintIndex = paintIndex;
+        }
+    }
+
+    @Test
+    public void testNumberOfWaysToMakeChange()
+    {
+        /**
+         * Given an infinite number of quarters (25 cents), dimes (10 cents), nickels (5 cents), and
+         pennies (1 cent), write code to calculate the number of ways of representing n cents.
+         */
+
+        /**
+         * If n=98, it's number of ways of reaching 98 without 25 cents
+         * + number of ways of reaching 73 without 25 cents
+         * + number of ways of reaching 48 without 25 cents
+         * + number of ways of reaching 23 without 25 cents
+         */
+
+        int n=98;
+
+        int numWays = getNumWays(n);
+        System.out.println(numWays);
+
+        Assert.assertEquals(2,getNumWays(5));
+        Assert.assertEquals(4,getNumWays(10));
+
+
+    }
+
+    private int getNumWays(int n) {
+        int[] changeArray = new int[]{1,5,10,25};
+        return getNumWays(n,changeArray,changeArray.length-1);
+    }
+
+    private int getNumWays(int n, int[] changeArray, int maxIndex) {
+        if(maxIndex==0)
+            return 1;
+        if(n<changeArray[maxIndex])
+            return getNumWays(n,changeArray,maxIndex-1);
+        int numWays=0;
+        for(int i=0;i<=n/changeArray[maxIndex];i++)
+        {
+            numWays+=getNumWays(n-(i*changeArray[maxIndex]),changeArray,maxIndex-1);
+        }
+        return numWays;
+    }
+
+
+
 }
