@@ -866,37 +866,28 @@ public class MiscellaneousPuzzlesTest {
 
         board = getChessBoard();
         printQueenConfigurations(board, 0);
-        Assert.assertEquals(92,ctr);
+        Assert.assertEquals(92, ctr);
     }
 
-    static int ctr=0;
+    static int ctr = 0;
+
     private void printQueenConfigurations(char[][] board, int minIndex) {
         Set<RowColumnDTO> queenPositions = getQueenPositions(board);
         if (queenPositions.size() == 8) {
-//            printBoard(board);
             ctr++;
             return;
         }
-        if(minIndex==8)
+        if (minIndex == 8)
             return;
-//        if (minIndex == 6 && queenPositions.size() < 7)
-//            return;
 
         for (int i = 0; i < 8; i++) {
-            char prev = board[i][minIndex];
-//            if (isValidQueenPlacement(board, i, minIndex, queenPositions)) {
-//                board[i][minIndex] = 'Q';
-//                printQueenConfigurations(board, minIndex + 1);
-//                board[i][minIndex] = prev;
-//            }
             if (isValidQueenPlacement(board, minIndex, i, queenPositions)) {
-                prev = board[minIndex][i];
+                char prev = board[minIndex][i];
                 board[minIndex][i] = 'Q';
                 printQueenConfigurations(board, minIndex + 1);
                 board[minIndex][i] = prev;
             }
         }
-//        printQueenConfigurations(board, minIndex + 1);
     }
 
     private Set<RowColumnDTO> getQueenPositions(char[][] board) {
@@ -929,11 +920,6 @@ public class MiscellaneousPuzzlesTest {
             return false;
         if ((potentialPosition.row - potentialPosition.col) == (queenPosition.row - queenPosition.col)) //check diagonal 2
             return false;
-//        System.out.println("Returning True for "+potentialPosition+" and "+queenPosition);
-//        RowColumnDTO testDTO = new RowColumnDTO(5,1);
-//        RowColumnDTO testDTO2 = new RowColumnDTO(6,4);
-//        if(testDTO.equals(queenPosition)&&potentialPosition.equals(testDTO2))
-//            System.out.println(potentialPosition);
         return true;
     }
 
@@ -946,7 +932,7 @@ public class MiscellaneousPuzzlesTest {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                sb.append(board[i][j] == 'Q' ? ""+i+j : '-');
+                sb.append(board[i][j] == 'Q' ? "" + i + j : '-');
                 sb.append("\t");
             }
             sb.append("\n");
@@ -965,6 +951,113 @@ public class MiscellaneousPuzzlesTest {
             flag ^= true;
         }
         return board;
+    }
+
+
+    /**
+     * Given a boolean expression consisting of the symbols 0 (false), 1 (true), & (AND), | (OR), and ^ (XOR),
+     * and a desired boolean result value 'result',
+     * implement a function to count the number of ways of parenthesizing the expression such that it evaluates to result.
+     */
+    @Test
+    public void testBooleanPermutation() {
+
+        Assert.assertEquals(2, countEval("1^0|0|1", false));
+
+        Assert.assertEquals(10, countEval("0&0&0&1^1|0", true));
+    }
+
+    private int countEval(String input, boolean result) {
+        boolean[] args = new boolean[(input.length() + 1) / 2];
+        char[] operators = new char[args.length - 1];
+        boolean flag = true;
+        int aIndex = 0, oIndex = 0;
+        for (char c : input.toCharArray()) {
+            if (flag) {
+                args[aIndex++] = (c != '0');
+            } else {
+                operators[oIndex++] = c;
+            }
+            flag ^= true;
+        }
+        int[][] trueMap = initializeMap(operators.length + 1);
+        int[][] falseMap = initializeMap(operators.length + 1);
+        int[][] totalMap = initializeMap(operators.length + 1);
+
+        return countEval(args, operators, 0, operators.length, result, trueMap, falseMap, totalMap);
+    }
+
+    private int[][] initializeMap(int length) {
+        int[][] map = new int[length][length];
+
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map.length; j++) {
+                map[i][j] = -1;
+            }
+        }
+        return map;
+    }
+
+    private int countEval(boolean[] args, char[] operators, int start, int end, boolean result, int[][] trueMap, int[][] falseMap, int[][] totalMap) {
+        int[][] myMap = result ? trueMap : falseMap;
+        int[][] otherMap = result ? falseMap : trueMap;
+        if (myMap[start][end] != -1)
+            return myMap[start][end];
+
+        int sum = 0;
+        if (start == end) {
+            int returnValue = (args[start] == result) ? 1 : 0;
+            myMap[start][end] = returnValue;
+            otherMap[start][end] = 1 - returnValue;
+            return returnValue;
+        }
+        for (int i = start; i < end; i++) {
+            if (result) {
+                if (operators[i] == '&') {
+                    sum += countEval(args, operators, start, i, true, trueMap, falseMap, totalMap)
+                            * countEval(args, operators, i + 1, end, true, trueMap, falseMap, totalMap);
+                }
+                if (operators[i] == '^') {
+                    sum += countEval(args, operators, start, i, false, trueMap, falseMap, totalMap)
+                            * countEval(args, operators, i + 1, end, true, trueMap, falseMap, totalMap)
+                            + countEval(args, operators, start, i, true, trueMap, falseMap, totalMap)
+                            * countEval(args, operators, i + 1, end, false, trueMap, falseMap, totalMap);
+                }
+                if (operators[i] == '|') {
+                    sum += countTotal(args, operators, start, i, trueMap, falseMap, totalMap)
+                            * countTotal(args, operators, i + 1, end, trueMap, falseMap, totalMap)
+                            - countEval(args, operators, start, i, false, trueMap, falseMap, totalMap)
+                            * countEval(args, operators, i + 1, end, false, trueMap, falseMap, totalMap);
+                }
+            } else {
+                if (operators[i] == '&') {
+                    sum += countTotal(args, operators, start, i, trueMap, falseMap, totalMap)
+                            * countTotal(args, operators, i + 1, end, trueMap, falseMap, totalMap)
+                            - countEval(args, operators, start, i, true, trueMap, falseMap, totalMap)
+                            * countEval(args, operators, i + 1, end, true, trueMap, falseMap, totalMap);
+                }
+                if (operators[i] == '^') {
+                    sum += countEval(args, operators, start, i, false, trueMap, falseMap, totalMap)
+                            * countEval(args, operators, i + 1, end, false, trueMap, falseMap, totalMap)
+                            + countEval(args, operators, start, i, true, trueMap, falseMap, totalMap)
+                            * countEval(args, operators, i + 1, end, true, trueMap, falseMap, totalMap);
+                }
+                if (operators[i] == '|') {
+                    sum += countEval(args, operators, start, i, false, trueMap, falseMap, totalMap)
+                            * countEval(args, operators, i + 1, end, false, trueMap, falseMap, totalMap);
+                }
+            }
+        }
+        myMap[start][end] = sum;
+
+        return sum;
+    }
+
+    private int countTotal(boolean[] args, char[] operators, int start, int end, int[][] trueMap, int[][] falseMap, int[][] totalMap) {
+        if (totalMap[start][end] != -1)
+            return totalMap[start][end];
+        return countEval(args, operators, start, end, true, trueMap, falseMap, totalMap)
+                + countEval(args, operators, start, end, false, trueMap, falseMap, totalMap);
     }
 
 }
