@@ -9,6 +9,7 @@ public class Node {
     private Character key;
     private Node[] children;
     private boolean isRoot = false;
+    private boolean isLast=false;
 
     public Node(Node parent, Character key) {
         this.parent = parent;
@@ -23,6 +24,10 @@ public class Node {
             char c = word.charAt(index);
             Node child = childExists(c) ? getChild(c) : addChild(c);
             child.insert(word, index + 1);
+        }
+        else if(index==word.length())
+        {
+            isLast=true;
         }
     }
 
@@ -62,6 +67,10 @@ public class Node {
             if(!childExists(c))
                 return false;
             return getChild(c).wordExists(word,index+1);
+        }
+        else if(index==word.length()&&!isLast)
+        {
+                return false;
         }
         return true;
     }
